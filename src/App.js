@@ -240,7 +240,6 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [rowActionMode, setRowActionMode] = useState('view');
-  const [dataSource, setDataSource] = useState(API_BASE_URL ? 'api' : 'demo');
 
   const selectedRecord = useMemo(
     () => records.find((item) => item.matricule === selectedMatricule) || records[0],
@@ -265,12 +264,10 @@ function App() {
 
         setRecords(loadedRecords);
         setSelectedMatricule(loadedRecords[0].matricule);
-        setDataSource('api');
       })
       .catch((error) => {
         setRecords([]);
         setSelectedMatricule('');
-        setDataSource('api');
         setErrorMessage(error.message);
       });
   }, []);
