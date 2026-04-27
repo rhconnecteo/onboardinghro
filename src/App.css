@@ -3,15 +3,15 @@
 :root {
   --bg-main: #f4f7f5;
   --bg-panel: #ffffff;
-  --bg-side: linear-gradient(170deg, #1c2c3b, #1f4953 48%, #2e6d63);
-  --text-main: #14201a;
-  --text-soft: #51665a;
-  --line: #d6e2d9;
-  --line-strong: #c3d3c6;
-  --brand: #1f8b63;
-  --brand-dark: #1a6f51;
-  --brand-soft: #e6f6ee;
-  --focus: #8dcfb2;
+  --bg-side: linear-gradient(170deg, #1c3a66, #246daa 48%, #3b8fd1);
+  --text-main: #10253f;
+  --text-soft: #4a6b8e;
+  --line: #d3e2f0;
+  --line-strong: #b7cfe6;
+  --brand: #3f96ff;
+  --brand-dark: #1b67cc;
+  --brand-soft: #e5f0ff;
+  --focus: #80b0ff;
   --warning: #ba3f2f;
   --shadow-soft: 0 12px 40px rgba(26, 45, 36, 0.08);
   --shadow-strong: 0 18px 44px rgba(20, 38, 33, 0.13);
@@ -573,6 +573,112 @@
   display: block;
   color: var(--text-soft);
   font-size: 0.78rem;
+}
+
+.edit-mode-message,
+.view-mode-message {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #eff5ff;
+  border: 1px solid #c7d9f0;
+  color: #173a6d;
+}
+
+.iframe-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 31, 22, 0.78);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.iframe-modal {
+  width: min(1140px, 100%);
+  max-height: min(92vh, 900px);
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(20, 38, 33, 0.24);
+  overflow: hidden;
+  display: grid;
+  gap: 0;
+}
+
+.iframe-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e4ebe6;
+}
+
+.iframe-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.iframe-modal-header p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 0.94rem;
+}
+
+.iframe-close-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 18px;
+  background: #f2f4f0;
+  color: #2b3f33;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.iframe-modal-info {
+  padding: 0 24px 18px;
+  color: var(--text-soft);
+  background: #eef5ff;
+  border-bottom: 1px solid #d7e5fa;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.iframe-modal-view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 24px;
+  background: #f7faff;
+}
+
+.iframe-modal-view-grid div {
+  border: 1px solid #d3e1f1;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.iframe-modal-view-grid span {
+  display: block;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.iframe-modal-view-grid strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.97rem;
+}
+
+.edit-iframe {
+  width: 100%;
+  min-height: 520px;
+  border: none;
 }
 
 .helper-box {

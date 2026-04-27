@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useMemo, useState } from 'react';
 
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbw8mYNiax0hTw1_kHZGINyl_yt7UhyGaKM2utrP9oz9NxQNF82RqZDAWpt6wt-Umw2bMw/exec';
-const AUTH_USERNAME = 'tyfannie';
+const AUTH_USERNAME = 'tyfanie';
 const AUTH_PASSWORD = 'onboarding';
 
 const REQUIRED_FIELDS = [
@@ -240,6 +240,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [rowActionMode, setRowActionMode] = useState('view');
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   const selectedRecord = useMemo(
     () => records.find((item) => item.matricule === selectedMatricule) || records[0],
@@ -333,6 +334,7 @@ function App() {
   function onRowAction(matricule, mode) {
     setSelectedMatricule(matricule);
     setRowActionMode(mode);
+    setIsOverlayOpen(true);
     setStatusMessage('');
     setErrorMessage('');
   }
@@ -372,6 +374,78 @@ function App() {
   }
 
   const currentMissingFields = selectedRecord ? getMissingFields(selectedRecord) : [];
+
+  useEffect(() => {
+    function handleIframeMessage(event) {
+      if (!event.data || event.data.type !== 'iframeFormUpdate') {
+        return;
+      }
+      setFormState((current) => ({ ...current, ...event.data.data }));
+    }
+
+    window.addEventListener('message', handleIframeMessage);
+    return () => window.removeEventListener('message', handleIframeMessage);
+  }, []);
+
+  function getIframeSrcDoc() {
+    if (!selectedRecord) {
+      return '<!doctype html><html><body>Pas de collaborateur selectionne.</body></html>';
+    }
+
+    const missingFields = getMissingFields(selectedRecord);
+    const inputs = missingFields
+      .map((field) => {
+        const label = FIELD_LABELS[field] || field;
+        const type = field.includes('Date') ? 'date' : field === 'mailConnecteo' ? 'email' : 'text';
+        return `
+          <label>
+            ${label}
+            <input name="${field}" type="${type}" value="" />
+          </label>
+        `;
+      })
+      .join('');
+
+    return `<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edition Collaborateur</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #f4faf6; color: #14201a; }
+      h2 { margin-top: 0; font-size: 1.1rem; }
+      form { display: grid; gap: 16px; }
+      label { display: grid; gap: 8px; font-weight: 700; font-size: 0.95rem; }
+      input { width: 100%; padding: 10px 12px; border: 1px solid #c3d3c6; border-radius: 10px; font: inherit; }
+      button { padding: 12px 16px; border: none; border-radius: 12px; background: #1f8b63; color: #fff; cursor: pointer; font-weight: 700; }
+      .info { margin: 0 0 12px; padding: 12px; background: #eef8ef; border: 1px solid #d5ecd6; border-radius: 12px; }
+      .empty { color: #556a5b; }
+    </style>
+  </head>
+  <body>
+    <h2>Remplir les champs manquants</h2>
+    <div class="info">Veuillez renseigner les champs manquants ci-dessous, puis envoyer au parent.</div>
+    <form id="iframe-form">
+      ${inputs || '<p class="empty">Aucun champ manquant pour ce collaborateur.</p>'}
+      ${missingFields.length ? '<button type="submit">Envoyer</button>' : ''}
+    </form>
+    <script>
+      const form = document.getElementById('iframe-form');
+      if (form) {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const data = {};
+          formData.forEach((value, key) => {
+            data[key] = value;
+          });
+          window.parent.postMessage({ type: 'iframeFormUpdate', data }, '*');
+        });
+      }
+    </script>
+  </body>
+</html>`;
+  }
 
   function handleLogin(event) {
     event.preventDefault();
@@ -641,102 +715,14 @@ function App() {
                   </div>
 
                   {rowActionMode === 'edit' ? (
-                    <form className="form-grid" onSubmit={onSubmitForm}>
-                      <label>
-                        Login YAS
-                        <input
-                          type="text"
-                          value={formState.loginYas}
-                          onChange={(event) =>
-                            setFormState((current) => ({ ...current, loginYas: event.target.value }))
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        Date creation YAS
-                        <input
-                          type="date"
-                          value={formState.dateCreationYas}
-                          onChange={(event) =>
-                            setFormState((current) => ({
-                              ...current,
-                              dateCreationYas: event.target.value,
-                            }))
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        Login CNTO
-                        <input
-                          type="text"
-                          value={formState.loginCnto}
-                          onChange={(event) =>
-                            setFormState((current) => ({ ...current, loginCnto: event.target.value }))
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        Date creation CNTO
-                        <input
-                          type="date"
-                          value={formState.dateCreationCnto}
-                          onChange={(event) =>
-                            setFormState((current) => ({
-                              ...current,
-                              dateCreationCnto: event.target.value,
-                            }))
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label className="full-width">
-                        Mail Connecteo
-                        <input
-                          type="email"
-                          value={formState.mailConnecteo}
-                          onChange={(event) =>
-                            setFormState((current) => ({
-                              ...current,
-                              mailConnecteo: event.target.value,
-                            }))
-                          }
-                          required
-                        />
-                      </label>
-
-                      <button type="submit" className="save-btn" disabled={isSaving}>
-                        {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-                      </button>
-                    </form>
+                    <div className="edit-mode-message">
+                      <p>L'édition s'ouvre désormais dans un iframe en superposition.</p>
+                      <p>Cliquez sur le bouton Fermer pour revenir à la vue standard.</p>
+                    </div>
                   ) : (
-                    <div className="view-grid">
-                      <div>
-                        <span>Login YAS</span>
-                        <strong>{selectedRecord.loginYas || '-'}</strong>
-                      </div>
-                      <div>
-                        <span>Date creation YAS</span>
-                        <strong>{toLocalDateOnly(selectedRecord.dateCreationYas) || '-'}</strong>
-                      </div>
-                      <div>
-                        <span>Login CNTO</span>
-                        <strong>{selectedRecord.loginCnto || '-'}</strong>
-                      </div>
-                      <div>
-                        <span>Date creation CNTO</span>
-                        <strong>{toLocalDateOnly(selectedRecord.dateCreationCnto) || '-'}</strong>
-                      </div>
-                      <div className="full-width">
-                        <span>Mail Connecteo</span>
-                        <strong>{selectedRecord.mailConnecteo || '-'}</strong>
-                      </div>
+                    <div className="view-mode-message">
+                      <p>La visualisation s'ouvre désormais dans une fenêtre modale.</p>
+                      <p>Cliquez sur le bouton Fermer pour revenir à la vue standard.</p>
                     </div>
                   )}
                 </div>
@@ -770,6 +756,70 @@ function App() {
             {statusMessage && <p className="status-ok">{statusMessage}</p>}
             {errorMessage && <p className="status-ko">{errorMessage}</p>}
           </section>
+        )}
+
+        {isOverlayOpen && selectedRecord && (rowActionMode === 'edit' || rowActionMode === 'view') && (
+          <div className="iframe-overlay" role="dialog" aria-modal="true">
+            <div className="iframe-modal">
+              <div className="iframe-modal-header">
+                <div>
+                  <h3>{rowActionMode === 'edit' ? 'Edition du collaborateur' : 'Visualisation du collaborateur'}</h3>
+                  <p>{selectedRecord.matricule} - {selectedRecord.nomPrenoms}</p>
+                </div>
+                <button type="button" className="iframe-close-btn" onClick={() => setIsOverlayOpen(false)}>
+                  Fermer
+                </button>
+              </div>
+              <div className="iframe-modal-info">
+                {rowActionMode === 'edit' ? (
+                  <>
+                    <p>Remplissez les champs manquants dans l'iframe ci-dessous, puis cliquez sur Enregistrer.</p>
+                    <button
+                      type="button"
+                      className="save-btn"
+                      onClick={onSubmitForm}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                    </button>
+                  </>
+                ) : (
+                  <p>Consultez les informations du collaborateur ci-dessous puis fermez la fenêtre pour revenir à la liste.</p>
+                )}
+              </div>
+              {rowActionMode === 'edit' ? (
+                <iframe
+                  title="Edition collaborateur"
+                  className="edit-iframe"
+                  srcDoc={getIframeSrcDoc()}
+                  key={selectedMatricule || 'iframe-empty'}
+                />
+              ) : (
+                <div className="iframe-modal-view-grid">
+                  <div>
+                    <span>Login YAS</span>
+                    <strong>{selectedRecord.loginYas || '-'}</strong>
+                  </div>
+                  <div>
+                    <span>Date creation YAS</span>
+                    <strong>{toLocalDateOnly(selectedRecord.dateCreationYas) || '-'}</strong>
+                  </div>
+                  <div>
+                    <span>Login CNTO</span>
+                    <strong>{selectedRecord.loginCnto || '-'}</strong>
+                  </div>
+                  <div>
+                    <span>Date creation CNTO</span>
+                    <strong>{toLocalDateOnly(selectedRecord.dateCreationCnto) || '-'}</strong>
+                  </div>
+                  <div className="full-width">
+                    <span>Mail Connecteo</span>
+                    <strong>{selectedRecord.mailConnecteo || '-'}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {activeView === 'analytics' && (
